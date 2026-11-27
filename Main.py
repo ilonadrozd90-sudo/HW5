@@ -193,8 +193,8 @@ class HeatTransfer(QWidget):
         new_T2 = self.b2.add_heat(Q2)
 
         self.left_temp_display.setValue(new_T1)
-        self.right_temp_display.setValue(new_T2)
         self.left_visual.setStyleSheet(self.temp_to_color(new_T1))
+        self.right_temp_display.setValue(new_T2)
         self.right_visual.setStyleSheet(self.temp_to_color(new_T2))
 
         self.left_slider.blockSignals(True)
