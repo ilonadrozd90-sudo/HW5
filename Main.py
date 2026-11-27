@@ -1,4 +1,4 @@
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import QWidget, QApplication, QDoubleSpinBox, QLabel, QPushButton, QSlider
 from Body import Body
 from About import About
@@ -8,9 +8,13 @@ class HeatTransfer(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.b1 = Body(mass=10.0, heat_capacity=0.40, temp=0.0)
-        self.b2 = Body(mass=10.0, heat_capacity=0.40, temp=0.0)
-        self.sigma = 1.0
+        self.b1 = Body(mass=10, heat_capacity=0.40, temp=0)
+        self.b2 = Body(mass=10, heat_capacity=0.40, temp=0)
+        self.sigma = 1
+        self.dt = 0.01
+
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.timer_method)
 
         self.setup()
 
@@ -82,6 +86,7 @@ class HeatTransfer(QWidget):
         self.start_button.setCheckable(True)
         self.start_button.move(300, 225)
         self.start_button.resize(100, 35)
+        self.start_button.clicked.connect(self.start_stop_button_method)
 
         self.graphs_button = QPushButton("Graphs", self)
         self.graphs_button.move(300, 270)
@@ -163,6 +168,41 @@ class HeatTransfer(QWidget):
         self.about_window = About()
         self.about_window.show()
 
+    def start_stop_button_method(self):
+        if self.start_button.isChecked():
+            self.b1 = Body(mass=self.left_mass_input.value(), heat_capacity=self.left_h_cap_input.value(),temp=self.left_slider.value())
+            self.b2 = Body(mass=self.right_mass_input.value(), heat_capacity=self.right_h_cap_input.value(), temp=self.right_slider.value())
+            self.start_button.setText("Stop")
+            self.timer.start(self.dt*1000)
+        else:
+            self.start_button.setText("Start")
+            self.timer.stop()
+
+    def timer_method(self):
+        sigma = self.conductivity_input.value()
+        T1 = self.b1.temp
+        T2 = self.b2.temp
+
+        I1 = sigma * (T2 - T1)
+        I2 = sigma * (T1 - T2)
+
+        Q1 = I1 * self.dt
+        Q2 = I2 * self.dt
+
+        new_T1 = self.b1.add_heat(Q1)
+        new_T2 = self.b2.add_heat(Q2)
+
+        self.left_temp_display.setValue(new_T1)
+        self.right_temp_display.setValue(new_T2)
+        self.left_visual.setStyleSheet(self.temp_to_color(new_T1))
+        self.right_visual.setStyleSheet(self.temp_to_color(new_T2))
+
+        self.left_slider.blockSignals(True)
+        self.left_slider.setValue(round(new_T1))
+        self.left_slider.blockSignals(False)
+        self.right_slider.blockSignals(True)
+        self.right_slider.setValue(round(new_T2))
+        self.right_slider.blockSignals(False)
 
 if __name__ == "__main__":
     app = QApplication()
