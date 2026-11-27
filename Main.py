@@ -19,6 +19,7 @@ class HeatTransfer(QWidget):
         self.setFixedSize(700, 420)
 
         self.left_slider = QSlider(Qt.Orientation.Vertical, self)
+        self.left_slider.setRange(0, 200)
         self.left_slider.setValue(int(self.b1.temp))
         self.left_slider.move(35, 45)
         self.left_slider.resize(25, 160)
@@ -27,7 +28,7 @@ class HeatTransfer(QWidget):
         self.left_visual = QLabel(self)
         self.left_visual.move(75, 50)
         self.left_visual.resize(90, 150)
-        self.left_visual.setStyleSheet("background-color: blue; border: 1px solid black;")
+        self.left_visual.setStyleSheet(self.temp_to_color(self.b1.temp))
 
         self.left_temp_label = QLabel("Temp.", self)
         self.left_temp_label.move(40, 230)
@@ -96,9 +97,10 @@ class HeatTransfer(QWidget):
         self.right_visual = QLabel(self)
         self.right_visual.move(535, 50)
         self.right_visual.resize(90, 150)
-        self.right_visual.setStyleSheet("background-color: blue; border: 1px solid black;")
+        self.right_visual.setStyleSheet(self.temp_to_color(self.b2.temp))
 
         self.right_slider = QSlider(Qt.Orientation.Vertical, self)
+        self.right_slider.setRange(0, 200)
         self.right_slider.setValue(int(self.b2.temp))
         self.right_slider.move(640, 45)
         self.right_slider.resize(25, 160)
@@ -136,13 +138,22 @@ class HeatTransfer(QWidget):
         self.right_h_cap_label = QLabel("H. Cap.", self)
         self.right_h_cap_label.move(625, 300)
 
-    def left_slider_changed(self, value: int):
-        self.b1.temp = float(value)
-        self.left_temp_display.setValue(self.b1.temp)
+    def temp_to_color(self, temp_val):
+        borders = max(0, min(200, temp_val))
+        ratio = borders / 200.0
+        red = int(ratio * 255)
+        blue = int((1.0 - ratio) * 255)
+        return f"background-color: rgb({red}, 0, {blue}); border: 1px solid black;"
 
-    def right_slider_changed(self, value: int):
-        self.b2.temp = float(value)
+    def left_slider_changed(self, value):
+        self.b1.temp = value
+        self.left_temp_display.setValue(self.b1.temp)
+        self.left_visual.setStyleSheet(self.temp_to_color(self.b1.temp))
+
+    def right_slider_changed(self, value):
+        self.b2.temp = value
         self.right_temp_display.setValue(self.b2.temp)
+        self.right_visual.setStyleSheet(self.temp_to_color(self.b2.temp))
 
     def open_graphs_window(self):
         self.graph_window = Graph()
